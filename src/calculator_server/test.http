@@ -1,0 +1,8 @@
+POST http://localhost:3000/add
+Accept: application/json
+Content-Type: application/json
+
+{
+  "number1": "10",
+  "number2": "20"
+}
