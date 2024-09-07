@@ -36,6 +36,8 @@ func main() {
 
 	http.HandleFunc("/divide", divideHandler)
 
+	http.HandleFunc("/sum", sumHandler)
+
 	err := http.ListenAndServe(port, nil)
 	if err != nil {
 		slog.Error("Failed to start server", "error", err)

@@ -48,7 +48,8 @@ func genericPairHandler(w http.ResponseWriter, r *http.Request, f func(int, int)
 
 	result := f(*pair.Number1, *pair.Number2)
 
-	err = json.NewEncoder(w).Encode(result)
+	w.Header().Set("Content-Type", "application/json")
+	err = json.NewEncoder(w).Encode(map[string]int{"result": result})
 	if err != nil {
 		slog.Error("Failed to encode response", "error", err)
 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)

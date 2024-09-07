@@ -7,25 +7,18 @@ import (
 	"net/http"
 )
 
-type dividePair struct {
-	Dividend *int `json:"dividend"`
-	Divisor  *int `json:"divisor"`
+type sumArray struct {
+	Items []int `json:"items"`
 }
 
-func (p dividePair) validate() error {
-	if p.Dividend == nil {
-		return errors.New("dividend field is required but missing")
-	}
-	if p.Divisor == nil {
-		return errors.New("divisor field is required but missing")
-	}
-	if *p.Divisor == 0 {
-		return errors.New("divisor cannot be zero")
+func (s sumArray) validate() error {
+	if s.Items == nil {
+		return errors.New("items field is required but missing")
 	}
 	return nil
 }
 
-func divideHandler(w http.ResponseWriter, r *http.Request) {
+func sumHandler(w http.ResponseWriter, r *http.Request) {
 	slog.Info("Received request", "method", r.Method, "url", r.URL.String())
 
 	if r.Method != http.MethodPost {
@@ -33,9 +26,9 @@ func divideHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var pair dividePair
+	var sum sumArray
 
-	err := json.NewDecoder(r.Body).Decode(&pair)
+	err := json.NewDecoder(r.Body).Decode(&sum)
 	if err != nil {
 		errMsg := "Failed to decode request"
 		http.Error(w, errMsg, http.StatusBadRequest)
@@ -43,14 +36,17 @@ func divideHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = pair.validate()
+	err = sum.validate()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		slog.Error("Invalid request", "error", err)
 		return
 	}
 
-	result := *pair.Dividend / *pair.Divisor
+	result := 0
+	for _, item := range sum.Items {
+		result += item
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(w).Encode(map[string]int{"result": result})
