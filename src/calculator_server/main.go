@@ -22,17 +22,27 @@ func main() {
 
 	slog.Info("Starting server", "port", port)
 
+	var pair numberPair
+
 	http.HandleFunc("/add", func(w http.ResponseWriter, r *http.Request) {
-		genericPairHandler(w, r, func(a, b int) int { return a + b })
+		genericHandler[numberPair](w, r, pair, func(*input genericNumberInput) int {
+			return *numberPair.Number1 + *numberPair.Number2
+		})
 	})
 
-	http.HandleFunc("/subtract", func(w http.ResponseWriter, r *http.Request) {
-		genericPairHandler(w, r, func(a, b int) int { return a - b })
-	})
-
-	http.HandleFunc("/multiply", func(w http.ResponseWriter, r *http.Request) {
-		genericPairHandler(w, r, func(a, b int) int { return a * b })
-	})
+	// http.HandleFunc("/subtract", func(w http.ResponseWriter, r *http.Request) {
+	// 	genericHandler(w, r, pair, func(input genericNumberInput) int {
+	// 		numberPair := input.(numberPair)
+	// 		return *numberPair.Number1 - *numberPair.Number2
+	// 	})
+	// })
+	//
+	// http.HandleFunc("/multiply", func(w http.ResponseWriter, r *http.Request) {
+	// 	genericHandler(w, r, pair, func(input genericNumberInput) int {
+	// 		numberPair := input.(numberPair)
+	// 		return *numberPair.Number1 * *numberPair.Number2
+	// 	})
+	// })
 
 	http.HandleFunc("/divide", divideHandler)
 

@@ -5,7 +5,12 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"reflect"
 )
+
+type genericNumberInput interface {
+	validate() error
+}
 
 type numberPair struct {
 	Number1 *int `json:"number1"`
@@ -22,7 +27,7 @@ func (p numberPair) validate() error {
 	return nil
 }
 
-func genericPairHandler(w http.ResponseWriter, r *http.Request, f func(int, int) int) {
+func genericHandler(w http.ResponseWriter, r *http.Request, input genericNumberInput, f func(genericNumberInput) int) {
 	slog.Info("Received request", "method", r.Method, "url", r.URL.String())
 
 	if r.Method != http.MethodPost {
@@ -30,23 +35,31 @@ func genericPairHandler(w http.ResponseWriter, r *http.Request, f func(int, int)
 		return
 	}
 
-	var pair numberPair
+	inputType := reflect.TypeOf(input)
+	newInput := reflect.New(inputType).Interface()
 
-	err := json.NewDecoder(r.Body).Decode(&pair)
+	err := json.NewDecoder(r.Body).Decode(&input)
 	if err != nil {
 		slog.Error("Failed to decode request", "error", err)
 		http.Error(w, "Failed to decode request", http.StatusBadRequest)
 		return
 	}
 
-	err = pair.validate()
+	typedInput, ok := newInput.(genericNumberInput)
+	if !ok {
+		slog.Error("Failed to cast input", "error", errors.New("Failed to cast input"))
+		http.Error(w, "Failed to cast input", http.StatusInternalServerError)
+		return
+	}
+
+	err = typedInput.validate()
 	if err != nil {
 		slog.Error("Invalid request", "error", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	result := f(*pair.Number1, *pair.Number2)
+	result := f(typedInput)
 
 	w.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(w).Encode(map[string]int{"result": result})
