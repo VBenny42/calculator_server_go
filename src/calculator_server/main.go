@@ -22,31 +22,44 @@ func main() {
 
 	slog.Info("Starting server", "port", port)
 
-	var pair numberPair
-
 	http.HandleFunc("/add", func(w http.ResponseWriter, r *http.Request) {
-		genericHandler[numberPair](w, r, pair, func(*input genericNumberInput) int {
-			return *numberPair.Number1 + *numberPair.Number2
+		var pair numberPair
+		genericHandler(w, r, pair, func(input numberPair) int {
+			return *input.Number1 + *input.Number2
 		})
 	})
 
-	// http.HandleFunc("/subtract", func(w http.ResponseWriter, r *http.Request) {
-	// 	genericHandler(w, r, pair, func(input genericNumberInput) int {
-	// 		numberPair := input.(numberPair)
-	// 		return *numberPair.Number1 - *numberPair.Number2
-	// 	})
-	// })
-	//
-	// http.HandleFunc("/multiply", func(w http.ResponseWriter, r *http.Request) {
-	// 	genericHandler(w, r, pair, func(input genericNumberInput) int {
-	// 		numberPair := input.(numberPair)
-	// 		return *numberPair.Number1 * *numberPair.Number2
-	// 	})
-	// })
+	http.HandleFunc("/subtract", func(w http.ResponseWriter, r *http.Request) {
+		var pair numberPair
+		genericHandler(w, r, pair, func(input numberPair) int {
+			return *input.Number1 - *input.Number2
+		})
+	})
 
-	http.HandleFunc("/divide", divideHandler)
+	http.HandleFunc("/multiply", func(w http.ResponseWriter, r *http.Request) {
+		var pair numberPair
+		genericHandler(w, r, pair, func(input numberPair) int {
+			return *input.Number1 * *input.Number2
+		})
+	})
 
-	http.HandleFunc("/sum", sumHandler)
+	http.HandleFunc("/divide", func(w http.ResponseWriter, r *http.Request) {
+		var pair dividePair
+		genericHandler(w, r, pair, func(input dividePair) int {
+			return *input.Dividend / *input.Divisor
+		})
+	})
+
+	http.HandleFunc("/sum", func(w http.ResponseWriter, r *http.Request) {
+		var numbers sumArray
+		genericHandler(w, r, numbers, func(input sumArray) int {
+			sum := 0
+			for _, n := range input.Items {
+				sum += n
+			}
+			return sum
+		})
+	})
 
 	err := http.ListenAndServe(port, nil)
 	if err != nil {
